@@ -1,11 +1,11 @@
-import asyncio
-
 import cv2
 import pyautogui
 import numpy as np
 import easyocr
 import requests
 from concurrent import futures
+from pynput.keyboard import Listener
+from pynput import keyboard
 
 URL = "https://api.warframe.market/v1"
 
@@ -105,25 +105,34 @@ def print_average_price(item, order_price_and_quantities):
     return average_price
 
 
-def main():
-    #frame = pyautogui.screenshot()
-    frame = cv2.imread("fissure_reward_2.jpg")
-    x = len(frame[0])
-    y = len(frame)
-    frame = frame[y//10:5*y//10, 0:x]
-    frame = preprocess_frame(frame)
-    words = run_easyocr(frame)
-    executor = futures.ThreadPoolExecutor(max_workers=6)
-    prices = dict()
-    for word in words:
-        location, item, _ = word
-        cv2.rectangle(frame, location[0], location[2], (255, 0, 0), 1)
-        prices[item] = executor.submit(get_price, item)
-    futures.wait(prices.values())
-    cv2.imshow('frame', frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+def main(key):
+    try:
+        if key == keyboard.Key.page_down:
+            print("entering main loop")
+            executor = futures.ThreadPoolExecutor(max_workers=6)
+            frame = pyautogui.screenshot()
+            frame = np.array(frame)
+            #frame = cv2.imread("fissure_reward_2.jpg")
+            x = len(frame[0])
+            y = len(frame)
+            frame = frame[y//10:5*y//10, 0:x]
+            frame = preprocess_frame(frame)
+            words = run_easyocr(frame)
+            prices = dict()
+            for word in words:
+                location, item, _ = word
+                cv2.rectangle(frame, location[0], location[2], (255, 0, 0), 1)
+                prices[item] = executor.submit(get_price, item)
+            futures.wait(prices.values())
+            #cv2.imshow('frame', frame)
+            #cv2.waitKey(0)
+            #cv2.destroyAllWindows()
+    except AttributeError:
+        print(key)
 
 
 if __name__ == '__main__':
-    main()
+    with Listener(on_press=main) as listener:
+        print("started")
+        while True:
+            listener.join()

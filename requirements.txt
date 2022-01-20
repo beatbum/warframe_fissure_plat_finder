@@ -3,3 +3,4 @@ PyAutoGUI~=0.9.53
 numpy~=1.22.1
 easyocr~=1.4.1
 requests~=2.27.1
+pynput~=1.7.6
