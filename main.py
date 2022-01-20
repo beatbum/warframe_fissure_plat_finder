@@ -1,8 +1,11 @@
+import asyncio
+
 import cv2
 import pyautogui
 import numpy as np
 import easyocr
 import requests
+from concurrent import futures
 
 URL = "https://api.warframe.market/v1"
 
@@ -62,7 +65,8 @@ def get_price(item):
         market = market.json()['payload']['orders']
         ingame_orders = get_ingame_orders(market)
         order_price_and_quantities = extract_plat_and_quantity_from_order(ingame_orders)
-        print_average_price(item, order_price_and_quantities)
+        avg_price = print_average_price(item, order_price_and_quantities)
+        return avg_price
 
 
 def query_market(item):
@@ -98,6 +102,7 @@ def print_average_price(item, order_price_and_quantities):
         sum_quantity += quantity
     average_price = sum_plat / sum_quantity
     print("{item}: Average Price: {price}".format(item=item, price=average_price))
+    return average_price
 
 
 def main():
@@ -108,10 +113,13 @@ def main():
     frame = frame[y//10:5*y//10, 0:x]
     frame = preprocess_frame(frame)
     words = run_easyocr(frame)
+    executor = futures.ThreadPoolExecutor(max_workers=6)
+    prices = dict()
     for word in words:
-        location = word[0]
+        location, item, _ = word
         cv2.rectangle(frame, location[0], location[2], (255, 0, 0), 1)
-        get_price(word[1])
+        prices[item] = executor.submit(get_price, item)
+    futures.wait(prices.values())
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
