@@ -15,11 +15,11 @@ class Gui(tk.Frame):
         self.create_output_frame()
 
     def create_output_frame(self):
-        self.output_frame = tk.Frame(self, padx=10, pady=10, borderwidth=2, relief="sunken")
+        self.output_frame = tk.Frame(self, padx=10, pady=10, borderwidth=3, relief="sunken")
         self.output = [*range(4)]
         print(self.output)
         for y in range(4):
-            self.output[y] = tk.Label(self.output_frame, text="Output will go here")
+            self.output[y] = tk.Label(self.output_frame, text="Output will go here", relief="raised", borderwidth=2, )
             self.output[y].grid(row=0, column=y)
             self.output_frame.grid(row=0, column=0)
         print(self.output)
@@ -43,5 +43,6 @@ class Gui(tk.Frame):
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.title("Plat Finder")
     app = Gui(master=root)
     app.mainloop()
